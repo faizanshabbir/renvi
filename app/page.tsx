@@ -4,7 +4,9 @@ export default function Home() {
   return (
     <div>
       <main>
-        <DashboardComponent />
+        <div>
+          Renvi Home
+        </div>
       </main>
     </div>
   );
