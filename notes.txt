@@ -1,0 +1,13 @@
+prompt: Make the room more colorful, change the bed and change the light, make it boho style
+
+Make the room more colorful by painting the walls, change the bed and change the light, make it boho style, remove any plants
+
+Provide only 1 credit for free
+Let only let people choose "styles" for rooms
+
+After people buy credits:
+Text box for specifics? => I think we need more testing here, if it doesnt work at all, then maybe no text box, just different styles?
+
+Operating costs?
+Replicate 1 image => 10-15 cents. Assume 15 cents
+Storage 1 image => 2 cents if using basic tier (using supabase for now)

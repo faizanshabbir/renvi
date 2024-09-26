@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import Replicate from "replicate"
 
 export function DashboardComponent() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
@@ -15,22 +16,62 @@ export function DashboardComponent() {
   const [outputImage, setOutputImage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => setUploadedImage(e.target?.result as string)
-      reader.readAsDataURL(file)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+        const data = await response.json()
+        setUploadedImage(data.url)
+      } catch (error) {
+        console.error('Error uploading image:', error)
+      }
     }
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setIsLoading(true)
-    // Simulating API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setOutputImage('/placeholder.svg')
-    setIsLoading(false)
+
+    try {
+      const fullImageUrl = new URL(uploadedImage!, window.location.origin).toString()
+      
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          input: fullImageUrl,
+          prompt,
+          style,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'An error occurred while generating the image')
+      }
+
+      const data = await response.json()
+      setOutputImage(data.output)
+    } catch (error: unknown) {
+      console.error("Error generating image:", error)
+      // Handle error (e.g., show error message to user)
+      if (error instanceof Error) {
+        alert(`Error: ${error.message}`)
+      } else {
+        alert('An unknown error occurred')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -94,13 +135,24 @@ export function DashboardComponent() {
             <CardTitle>Output</CardTitle>
           </CardHeader>
           <CardContent>
-            {outputImage ? (
-              <img src={outputImage} alt="Generated" className="max-w-full h-auto" />
-            ) : (
-              <div className="flex items-center justify-center h-64 bg-muted rounded-md">
-                <ImageIcon className="h-16 w-16 text-muted-foreground" />
+            <div className="space-y-4">
+              {uploadedImage && (
+                <div>
+                  <h3 className="font-semibold mb-2">Original Room</h3>
+                  <img src={uploadedImage} alt="Original Room" className="max-w-full h-auto" />
+                </div>
+              )}
+              <div>
+                <h3 className="font-semibold mb-2">Renovated Room</h3>
+                {outputImage ? (
+                  <img src={outputImage} alt="Generated" className="max-w-full h-auto" />
+                ) : (
+                  <div className="flex items-center justify-center h-64 bg-muted rounded-md">
+                    <ImageIcon className="h-16 w-16 text-muted-foreground" />
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>
