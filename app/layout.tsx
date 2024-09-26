@@ -14,8 +14,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <ClerkProvider>
-        <body>
+      <ClerkProvider appearance={{
+            layout: {
+              unsafe_disableDevelopmentModeWarnings: true,
+            },
+        }}>
+        <body className="max-w-screen-lg mx-auto">
           {children}
         </body>
       </ClerkProvider>
