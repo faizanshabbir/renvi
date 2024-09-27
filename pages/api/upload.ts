@@ -48,6 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             contentType: file.mimetype!,
           })
 
+        if(data) {
+          console.log('Data uploaded')
+        }
+
         if (error) {
           console.error('Supabase storage error:', error)
           throw error
