@@ -2,6 +2,13 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js'
 import { Webhook } from "svix"
+import { buffer } from "micro";
+
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+}
 
 const supabase = createClient(
     process.env.SUPABASE_URL!,
@@ -15,12 +22,12 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    console.log(webhookSecret)
+    const body = await req.text();
+
     try {
         const svix_id = req.headers.get("svix-id") ?? "";
         const svix_timestamp = req.headers.get("svix-timestamp") ?? "";
         const svix_signature = req.headers.get("svix-signature") ?? "";
-        const body = await req.text();
 
         // Ensure webhookSecret is not undefined
         if (!webhookSecret) {
@@ -28,21 +35,21 @@ export async function POST(req: Request) {
         }
 
         const svix = new Webhook(webhookSecret);
-
-        const msg = svix.verify(body, {
+        let msg;
+        msg = svix.verify(body, {
             "svix-id": svix_id,
             "svix-timestamp": svix_timestamp,
             "svix-signature": svix_signature,
-          });
-        console.log(msg)
+        });
         
     } catch (error) {
-        console.log('Unauthorized usage')
         return NextResponse.json({ error }, { status: 400})
     }
 
     try {
-        const event: WebhookEvent = await req.json();
+        // Convert the request body to JSON before processing
+        const requestBody = JSON.parse(body);
+        const event: WebhookEvent = requestBody;
         const eventType = event.type;
         if ('email_addresses' in event.data) {
             const { id, email_addresses } = event.data;
@@ -73,4 +80,26 @@ export async function POST(req: Request) {
         console.error('Error processing webhook:', error);
         return NextResponse.json({ error }, { status: 500 });
     }
+}
+
+export async function svixhandler(req) {
+    const payload = (await buffer(req)).toString();
+    const headers = req.headers;
+
+    if (!webhookSecret) {
+        throw new Error("Webhook secret is not defined");
+    }
+
+    const wh = new Webhook(webhookSecret);
+    let msg;
+    try {
+        msg = wh.verify(payload, headers);
+    } catch (err) {
+        console.log(err)
+        return false
+    }
+
+    // Do something with the message...
+
+    return true
 }
