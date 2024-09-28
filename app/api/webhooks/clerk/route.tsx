@@ -16,25 +16,30 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     console.log(webhookSecret)
-    // try {
-    //     const svix_id = req.headers.get("svix-id") ?? "";
-    //     const svix_timestamp = req.headers.get("svix-timestamp") ?? "";
-    //     const svix_signature = req.headers.get("svix-signature") ?? "";
-    //     const body = await req.text();
+    try {
+        const svix_id = req.headers.get("svix-id") ?? "";
+        const svix_timestamp = req.headers.get("svix-timestamp") ?? "";
+        const svix_signature = req.headers.get("svix-signature") ?? "";
+        const body = await req.text();
 
-    //     const sivx = new Webhook(webhookSecret);
+        // Ensure webhookSecret is not undefined
+        if (!webhookSecret) {
+            throw new Error("Webhook secret is not defined");
+        }
 
-    //     const msg = sivx.verify(body, {
-    //         "svix-id": svix_id,
-    //         "svix-timestamp": svix_timestamp,
-    //         "svix-signature": svix_signature,
-    //       });
-    //     console.log(msg)
+        const svix = new Webhook(webhookSecret);
+
+        const msg = svix.verify(body, {
+            "svix-id": svix_id,
+            "svix-timestamp": svix_timestamp,
+            "svix-signature": svix_signature,
+          });
+        console.log(msg)
         
-    // } catch (error) {
-    //     console.log('Unauthorized usage')
-    //     return NextResponse.json({ error }, { status: 400})
-    // }
+    } catch (error) {
+        console.log('Unauthorized usage')
+        return NextResponse.json({ error }, { status: 400})
+    }
 
     try {
         const event: WebhookEvent = await req.json();
