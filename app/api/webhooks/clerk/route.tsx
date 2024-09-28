@@ -8,7 +8,7 @@ const supabase = createClient(
     process.env.SUPABASE_KEY!
 )
 
-const webhookSecret = process.env.CLERK_SECRET_KEY
+const webhookSecret = process.env.CLERK_SVIX_WEBHOOK_SECRET_KEY
 
 export async function GET(req: Request) {
     return NextResponse.json({"hello": "world"})
