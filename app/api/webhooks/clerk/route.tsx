@@ -2,20 +2,20 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js'
 import { Webhook } from "svix"
-import { buffer } from "micro"
 
 const supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_KEY!
 )
 
-const webhookSecret = "REPLACE"
+const webhookSecret = process.env.CLERK_SECRET_KEY
 
 export async function GET(req: Request) {
     return NextResponse.json({"hello": "world"})
 }
 
 export async function POST(req: Request) {
+    console.log(webhookSecret)
     // try {
     //     const svix_id = req.headers.get("svix-id") ?? "";
     //     const svix_timestamp = req.headers.get("svix-timestamp") ?? "";
@@ -46,8 +46,8 @@ export async function POST(req: Request) {
                 const { data, error } = await supabase
                     .from('users')
                     .insert({
-                        id: id,
-                        email: email_addresses[0].email_address
+                        clerk_user_id: id,
+                        email_address: email_addresses[0].email_address
                     });
 
                 if (error) throw error;
@@ -62,6 +62,8 @@ export async function POST(req: Request) {
 
             return NextResponse.json({ success: true });
         }
+        console.log(event.data)
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error processing webhook:', error);
         return NextResponse.json({ error }, { status: 500 });
