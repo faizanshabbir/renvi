@@ -11,3 +11,19 @@ Text box for specifics? => I think we need more testing here, if it doesnt work 
 Operating costs?
 Replicate 1 image => 10-15 cents. Assume 15 cents
 Storage 1 image => 2 cents if using basic tier (using supabase for now)
+
+So say 20 cents roughly for an image generation
+
+So 1 credit, 1 image generation, assume 50% margin,
+1 credit = 50 cents
+
+$4.99 => 10 credits, 10 image generations. Cost: $2
+$9.99 => 30 credits, 30 image generations. Cost: $6
+$29.99 => 100 credits, 100 image generations. Cost: $20
+
+
+Future expansion / features:
+- Another tier with an hour of consultation with a real interior designer => $150
+- Furniture mode => Actual shopping list of furniture to buy to make it come to life
+- Normal furniture (see if even possible)
+- Budget furniture (see if even possible)

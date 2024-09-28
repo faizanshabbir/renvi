@@ -1,4 +1,5 @@
 import ClerkLayout from "@/components/clerkylayout";
+import PricingComponent from "@/components/pricing"
 
 export default function Home() {
   return (
@@ -7,6 +8,9 @@ export default function Home() {
       <main>
         <div>
           Renvi Home
+        </div>
+        <div>
+          <PricingComponent/>
         </div>
       </main>
     </div>

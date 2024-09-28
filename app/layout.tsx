@@ -19,7 +19,13 @@ export default function RootLayout({
               unsafe_disableDevelopmentModeWarnings: true,
             },
         }}>
-        <body className="max-w-screen-lg mx-auto">
+        <head>
+          <script
+            async
+            src="https://js.stripe.com/v3/pricing-table.js">
+          </script>
+        </head>
+        <body className="max-w-screen-xl mx-auto">
           {children}
         </body>
       </ClerkProvider>
