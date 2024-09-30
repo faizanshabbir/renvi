@@ -2,7 +2,6 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js'
 import { Webhook } from "svix"
-import { buffer } from "micro";
 
 export const config = {
     api: {
@@ -67,7 +66,7 @@ export async function POST(req: Request) {
                 const { data, error } = await supabase
                     .from('users')
                     .delete()
-                    .match({ id: id });
+                    .match({ clerk_user_id: id });
 
                 if (error) throw error;
             }
@@ -98,8 +97,6 @@ export async function svixhandler(req) {
         console.log(err)
         return false
     }
-
-    // Do something with the message...
 
     return true
 }
