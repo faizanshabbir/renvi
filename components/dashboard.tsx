@@ -1,12 +1,15 @@
 "use client"
 
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Upload, Send, Image as ImageIcon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import useSupabaseClient from '@/lib/useSupabaseClient'; // Import the custom hook
+import { useAuth } from '@clerk/nextjs'
+
 
 export function DashboardComponent() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
@@ -14,6 +17,9 @@ export function DashboardComponent() {
   const [style, setStyle] = useState('')
   const [outputImage, setOutputImage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [numCredits, setNumCredits] = useState(0)
+  const { supabaseClient, initializeSupabaseClient } = useSupabaseClient(); // Use the custom hook
+  const { userId } = useAuth();
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -37,6 +43,11 @@ export function DashboardComponent() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setIsLoading(true)
+    // Decrement credits after sending replicate submit
+    if(userId) {
+      await updateCredits(userId, numCredits - 1); // Decrement credits by 1
+    }
+    //Should record requests and response status info in a table so if users experience issues, we can corroroborate and fix
 
     try {
       const fullImageUrl = new URL(uploadedImage!, window.location.origin).toString()
@@ -60,6 +71,7 @@ export function DashboardComponent() {
 
       const data = await response.json()
       setOutputImage(data.output)
+
     } catch (error: unknown) {
       console.error("Error generating image:", error)
       // Handle error (e.g., show error message to user)
@@ -73,6 +85,65 @@ export function DashboardComponent() {
     }
   }
 
+  const loadCredits = async () => {
+    console.log(supabaseClient)
+    if (!supabaseClient) return; // Ensure the client is initialized
+
+    const { data, error } = await supabaseClient
+      .from('credits')
+      .select();
+
+    if (error) {
+      console.error('Error fetching credits:', error);
+    } else {
+      console.log('data:', data);
+      // You can also set a state here if needed
+      setNumCredits(data[0].num_credits);
+      console.log(data[0].num_credits)
+      console.log(numCredits)
+    }
+  };
+
+  useEffect(() => {
+    loadCredits();
+  }, [supabaseClient]); // Load credits when supabaseClient is set
+
+  const updateCredits = async (userId: string, amount: number) => {
+    // Ensure the Supabase client is initialized with a valid token
+    await initializeSupabaseClient(); // Refresh the Supabase client
+
+    console.log(supabaseClient);
+    if (!supabaseClient) return; // Ensure the client is initialized
+
+    try {
+      await initializeSupabaseClient();
+
+      const { data, error } = await supabaseClient
+        .from('credits')
+        .update({ num_credits: amount }) // Update the credits
+        .eq('clerk_user_id', userId); // Specify the user_id
+
+      if (error) {
+        console.error('Error updating credits:', error);
+      } else {
+        console.log('Credits updated successfully:', data);
+        loadCredits(); // Reload credits to reflect the changes
+      }
+    } catch (error) {
+      console.error('Unexpected error updating credits:', error);
+    }
+  };
+  
+  // Test button to update credits
+  const handleTestUpdateCredits = async () => {
+    if (userId) {
+      const newCreditAmount = numCredits - 1; // Decrement by 1 for testing
+      await updateCredits(userId, newCreditAmount);
+    } else {
+      alert('User ID is not available.');
+    }
+  };
+  
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Renvi - AI Virtual Designer</h1>
@@ -123,8 +194,8 @@ export function DashboardComponent() {
             </form>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleSubmit} disabled={!uploadedImage || !prompt || !style || isLoading}>
-              {isLoading ? 'Processing...' : 'Generate'}
+            <Button onClick={numCredits < 1 ? () => window.location.href = "/" : handleSubmit} disabled={!uploadedImage || !prompt || !style || isLoading}>
+              {isLoading ? 'Processing...' : numCredits < 1 ? 'Purchase Credits' : 'Generate'}
               {isLoading ? <Upload className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
             </Button>
           </CardFooter>
@@ -155,6 +226,13 @@ export function DashboardComponent() {
           </CardContent>
         </Card>
       </div>
+      <div>
+        {numCredits}
+      </div>
+      {/* Test button to update credits */}
+      <Button onClick={handleTestUpdateCredits} disabled={numCredits <= 0}>
+        Test Update Credits
+      </Button>
     </div>
   )
 }

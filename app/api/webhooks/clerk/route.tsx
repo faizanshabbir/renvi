@@ -3,15 +3,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js'
 import { Webhook } from "svix"
 
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-}
-
 const supabase = createClient(
     process.env.SUPABASE_URL!,
-    process.env.SUPABASE_KEY!
+    process.env.SUPABASE_SERVICE_KEY!
 )
 
 const webhookSecret = process.env.CLERK_SVIX_WEBHOOK_SECRET_KEY
@@ -50,53 +44,44 @@ export async function POST(req: Request) {
         const requestBody = JSON.parse(body);
         const event: WebhookEvent = requestBody;
         const eventType = event.type;
-        if ('email_addresses' in event.data) {
-            const { id, email_addresses } = event.data;
+
+        const id = event.data.id;
+        
+        if (eventType === 'user.created') {
+            const email_addresses = event.data.email_addresses
+            const { data, error } = await supabase
+                .from('users')
+                .insert({
+                    clerk_user_id: id,
+                    email_address: email_addresses[0].email_address
+                });
+
+            if (error) throw error;
+            // TODO: this may need to be fixed to prevent abuse?
+            // Works if user deletes account, recreates. Which is good and bad
+            // Best in the future is to probably "deactivate" account instead of full delete
+            const creditsInsertResult = await supabase
+                .from('credits')
+                .upsert({
+                    clerk_user_id: id,
+                    num_credits: 5
+                })
+            if (creditsInsertResult.error) throw creditsInsertResult.error;
             
-            if (eventType === 'user.created') {
-                const { data, error } = await supabase
-                    .from('users')
-                    .insert({
-                        clerk_user_id: id,
-                        email_address: email_addresses[0].email_address
-                    });
+        } else if (eventType === 'user.deleted') {
+            console.log("Deleting user")
+            const { data, error } = await supabase
+                .from('users')
+                .delete()
+                .match({ clerk_user_id: id });
 
-                if (error) throw error;
-            } else if (eventType === 'user.deleted') {
-                const { data, error } = await supabase
-                    .from('users')
-                    .delete()
-                    .match({ clerk_user_id: id });
-
-                if (error) throw error;
-            }
-
-            return NextResponse.json({ success: true });
+            if (error) throw error;
         }
-        console.log(event.data)
+
         return NextResponse.json({ success: true });
+
     } catch (error) {
         console.error('Error processing webhook:', error);
         return NextResponse.json({ error }, { status: 500 });
     }
-}
-
-export async function svixhandler(req) {
-    const payload = (await buffer(req)).toString();
-    const headers = req.headers;
-
-    if (!webhookSecret) {
-        throw new Error("Webhook secret is not defined");
-    }
-
-    const wh = new Webhook(webhookSecret);
-    let msg;
-    try {
-        msg = wh.verify(payload, headers);
-    } catch (err) {
-        console.log(err)
-        return false
-    }
-
-    return true
 }

@@ -1,5 +1,6 @@
 import ClerkLayout from '@/components/clerkylayout';
 import { DashboardComponent } from "@/components/dashboard";
+import ClerkDebugComponent from '@/components/clerkdebug'
 
 export default function DashboardPage() {
   return (
@@ -9,6 +10,9 @@ export default function DashboardPage() {
                 <DashboardComponent />
             </main>
         </div>
+        {/* <div>
+            <ClerkDebugComponent />
+        </div> */}
     </ClerkLayout>
   );
 }

@@ -27,3 +27,17 @@ Future expansion / features:
 - Furniture mode => Actual shopping list of furniture to buy to make it come to life
 - Normal furniture (see if even possible)
 - Budget furniture (see if even possible)
+
+For each user, 
+save image they have uploaded and the result (once result is fetched?) in image_urls?
+seems secondary tbh
+
+Testing notes:
+
+Webhook:
+- [SUCCEEDS] Create user when user doesnt exist
+- [FAILS] Create user x2 (user already exists)
+    Returns a 500 which i guess is fine?
+- [SUCCEEDS] Delete user when user exists
+- [SUCCEEDS] Delete user and doesnt exist in table
+    ok with this, its idempotent

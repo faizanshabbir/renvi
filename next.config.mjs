@@ -6,7 +6,8 @@ const nextConfig = {
   env: {
     REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN,
     SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_KEY: process.env.SUPABASE_KEY,
+    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
+    SUPABASE_PUBLIC_KEY: process.env.SUPABASE_PUBLIC_KEY
   },
   images: {
     remotePatterns: [
