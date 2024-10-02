@@ -194,10 +194,17 @@ export function DashboardComponent() {
             </form>
           </CardContent>
           <CardFooter>
-            <Button onClick={numCredits < 1 ? () => window.location.href = "/" : handleSubmit} disabled={!uploadedImage || !prompt || !style || isLoading}>
-              {isLoading ? 'Processing...' : numCredits < 1 ? 'Purchase Credits' : 'Generate'}
-              {isLoading ? <Upload className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
-            </Button>
+            <div className="space-x-2">
+              <Button onClick={handleSubmit} disabled={!uploadedImage || !prompt || !style || isLoading || numCredits < 1}>
+                {isLoading ? 'Processing...' : 'Generate'}
+                {isLoading ? <Upload className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
+              </Button>
+              {numCredits < 1 ? 
+              <Button onClick={() => window.location.href = "/"}>
+                Purchase Credits
+                <Send className="ml-2 h-4 w-4" />
+              </Button>:''}
+            </div>
           </CardFooter>
         </Card>
         <Card>
