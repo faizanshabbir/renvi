@@ -5,7 +5,6 @@ import { Upload, Send, Image as ImageIcon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import useSupabaseClient from '@/lib/useSupabaseClient'; // Import the custom hook
 import { useAuth } from '@clerk/nextjs'
@@ -21,6 +20,15 @@ export function DashboardComponent() {
   const { supabaseClient, initializeSupabaseClient } = useSupabaseClient(); // Use the custom hook
   const { userId } = useAuth();
 
+  const styleOptions = [
+    { id: 'modern', name: 'Modern', image: '/modern.png?height=100&width=100' },
+    { id: 'rustic', name: 'Rustic', image: '/rustic.png?height=100&width=100' },
+    { id: 'minimalist', name: 'Minimalist', image: '/minimalistic.png?height=100&width=100' },
+    { id: 'industrial', name: 'Industrial', image: '/industrial.png?height=100&width=100' },
+    { id: 'bohemian', name: 'Bohemian', image: '/bohemian.png?height=100&width=100' },
+    { id: 'scandinavian', name: 'Scandinavian', image: '/scandinavian.png?height=100&width=100' },
+  ]
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -33,6 +41,7 @@ export function DashboardComponent() {
           body: formData,
         })
         const data = await response.json()
+        console.log(data)
         setUploadedImage(data.url)
       } catch (error) {
         console.error('Error uploading image:', error)
@@ -70,7 +79,7 @@ export function DashboardComponent() {
       }
 
       const data = await response.json()
-      setOutputImage(data.output)
+      setOutputImage(data.output[1])
 
     } catch (error: unknown) {
       console.error("Error generating image:", error)
@@ -85,6 +94,10 @@ export function DashboardComponent() {
     }
   }
 
+  useEffect(() => {
+    console.log("output image", outputImage);
+  }, [outputImage]);
+
   const loadCredits = async () => {
     console.log(supabaseClient)
     if (!supabaseClient) return; // Ensure the client is initialized
@@ -96,11 +109,8 @@ export function DashboardComponent() {
     if (error) {
       console.error('Error fetching credits:', error);
     } else {
-      console.log('data:', data);
       // You can also set a state here if needed
       setNumCredits(data[0].num_credits);
-      console.log(data[0].num_credits)
-      console.log(numCredits)
     }
   };
 
@@ -148,92 +158,94 @@ export function DashboardComponent() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Renvi - AI Virtual Designer</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Input</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="image-upload">Upload Image</Label>
-                <Input 
-                  id="image-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleImageUpload}
-                />
-                {uploadedImage && (
-                  <div className="mt-2">
-                    <img src={uploadedImage} alt="Uploaded" className="max-w-full h-auto" />
-                  </div>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="prompt">Prompt</Label>
-                <Input 
-                  id="prompt" 
-                  value={prompt} 
-                  onChange={(e) => setPrompt(e.target.value)} 
-                  placeholder="Describe your desired changes..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="style">Style</Label>
-                <Select value={style} onValueChange={setStyle}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="modern">Modern</SelectItem>
-                    <SelectItem value="rustic">Rustic</SelectItem>
-                    <SelectItem value="minimalist">Minimalist</SelectItem>
-                    <SelectItem value="industrial">Industrial</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter>
-            <div className="space-x-2">
-              <Button onClick={handleSubmit} disabled={!uploadedImage || !prompt || !style || isLoading || numCredits < 1}>
-                {isLoading ? 'Processing...' : 'Generate'}
-                {isLoading ? <Upload className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
-              </Button>
-              {numCredits < 1 ? 
-              <Button onClick={() => window.location.href = "/"}>
-                Purchase Credits
-                <Send className="ml-2 h-4 w-4" />
-              </Button>:''}
+        <div>
+      <Card className="w-full max-w-md"> {/* Set a max width for the card */}
+        <CardHeader>
+          <CardTitle>Input</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="image-upload">Upload Image</Label>
+              <Input 
+                id="image-upload" 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageUpload}
+              />
             </div>
-          </CardFooter>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Output</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {uploadedImage && (
-                <div>
-                  <h3 className="font-semibold mb-2">Original Room</h3>
-                  <img src={uploadedImage} alt="Original Room" className="max-w-full h-auto" />
+            <div>
+              <Label htmlFor="prompt">Prompt</Label>
+              <Input 
+                id="prompt" 
+                value={prompt} 
+                onChange={(e) => setPrompt(e.target.value)} 
+                placeholder="Describe your desired changes..."
+              />
+            </div>
+            <div>
+                <Label>Style</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {styleOptions.map((option) => (
+                    <div
+                      key={option.id}
+                      className={`cursor-pointer rounded-md overflow-hidden border-2 transition-all ${
+                        style === option.id ? 'border-primary' : 'border-transparent'
+                      }`}
+                      onClick={() => setStyle(option.id)}
+                    >
+                      <img src={option.image} alt={option.name} className="w-full h-auto" />
+                      <p className="text-xs text-center py-1">{option.name}</p>
+                    </div>
+                  ))}
                 </div>
-              )}
-              <div>
-                <h3 className="font-semibold mb-2">Renovated Room</h3>
-                {outputImage ? (
-                  <img src={outputImage} alt="Generated" className="max-w-full h-auto" />
-                ) : (
-                  <div className="flex items-center justify-center h-64 bg-muted rounded-md">
-                    <ImageIcon className="h-16 w-16 text-muted-foreground" />
-                  </div>
-                )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <div className="space-x-2">
+            <Button onClick={handleSubmit} disabled={!uploadedImage || !prompt || !style || isLoading || numCredits < 1}>
+              {isLoading ? 'Processing...' : 'Generate'}
+              {isLoading ? <Upload className="ml-2 h-4 w-4 animate-spin" /> : <Send className="ml-2 h-4 w-4" />}
+            </Button>
+            {numCredits < 1 ? 
+            <Button onClick={() => window.location.href = "/"}>
+              Purchase Credits
+              <Send className="ml-2 h-4 w-4" />
+            </Button>:''}
+          </div>
+        </CardFooter>
+      </Card>
       </div>
       <div>
+      <Card className="w-full max-w-md"> {/* Set a max width for the card */}
+        <CardHeader>
+          <CardTitle>Output</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {uploadedImage && (
+              <div>
+                <h3 className="font-semibold mb-2">Original Room</h3>
+                <img src={uploadedImage} alt="Original Room" className="max-w-full h-auto" />
+              </div>
+            )}
+            <div>
+              <h3 className="font-semibold mb-2">Renovated Room</h3>
+              {outputImage ? (
+                <img src={outputImage} alt="Generated" className="max-w-full h-auto" />
+              ) : (
+                <div className="flex items-center justify-center h-64 bg-muted rounded-md">
+                  <ImageIcon className="h-16 w-16 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      </div>
+    </div>
+          <div>
         {numCredits}
       </div>
       {/* Test button to update credits */}

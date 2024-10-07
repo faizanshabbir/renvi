@@ -25,7 +25,7 @@ export default function RootLayout({
             src="https://js.stripe.com/v3/pricing-table.js">
           </script>
         </head>
-        <body className="max-w-screen-xl mx-auto">
+        <body className="max-w-full mx-auto">
           {children}
         </body>
       </ClerkProvider>

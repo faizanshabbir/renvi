@@ -21,16 +21,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
       const input_data = {
-        input: imageUrl,
+        image: imageUrl,
         prompt: `${prompt} in ${style} style`,
-        negative_prompt: "lowres, watermark, banner, logo, watermark, contactinfo, text, deformed, blurry, blur, out of focus, out of frame, surreal, extra, ugly, upholstered walls, fabric walls, plush walls, mirror, mirrored, functional",
-        num_inference_steps: 25
+        negative_prompt: "cartoon, animated, lowres, watermark, banner, logo, watermark, contactinfo, text, deformed, blurry, blur, out of focus, out of frame, surreal, extra, ugly, upholstered walls, fabric walls, plush walls, mirror, mirrored, functional",
+        num_inference_steps: 30
       };
 
-      const output = await replicate.run(
-        "erayyavuz/interior-ai:e299c531485aac511610a878ef44b554381355de5ee032d109fcae5352f39fa9",
+      const output: string[] = await replicate.run(
+        "adirik/t2i-adapter-sdxl-depth-midas:8a89b0ab59a050244a751b6475d91041a8582ba33692ae6fab65e0c51b700328",
         { input: input_data }
-      )
+      ) as string[]
+
+      console.log(output)
+      const tst = output
+      console.log(output[0])
+      console.log(output[1])
 
       res.status(200).json({ output })
     } catch (error: unknown) {
